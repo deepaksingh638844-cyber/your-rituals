@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#38a8ff">
+<title>Your Rituals</title>
+<style>
+:root{
+ --bg:#f4f9ff;--card:#fff;--text:#17202a;--muted:#718096;
+ --primary:#38a8ff;--border:#e5edf5;--danger:#ef4444;
+}
+*{box-sizing:border-box}
+body{
+ margin:0;font-family:system-ui,-apple-system,Segoe UI,sans-serif;
+ background:var(--bg);color:var(--text);
+}
+button,input,select{font:inherit}
+button{cursor:pointer;border:0}
+.app{max-width:700px;margin:auto;padding-bottom:90px}
+header{
+ padding:22px 18px 14px;position:sticky;top:0;z-index:5;
+ background:color-mix(in srgb,var(--bg) 92%,transparent);
+ backdrop-filter:blur(12px)
+}
+.brand{font-size:26px;font-weight:800}
+.subtitle{color:var(--muted);font-size:13px}
+.clock{text-align:right;margin-top:-35px}
+.clock b{display:block;font-size:18px}.clock span{color:var(--muted);font-size:12px}
+main{padding:8px 16px}
+.card{
+ background:var(--card);border:1px solid var(--border);
+ border-radius:20px;padding:18px;margin-bottom:14px;
+ box-shadow:0 4px 18px #00000008
+}
+.progress{
+ height:12px;background:var(--border);border-radius:20px;overflow:hidden;margin:12px 0
+}
+.progress i{display:block;height:100%;background:var(--primary);border-radius:20px;transition:.3s}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.big{font-size:34px;font-weight:800}
+.muted{color:var(--muted)}
+.btn{
+ background:var(--primary);color:white;padding:11px 15px;
+ border-radius:12px;font-weight:700
+}
+.btn.secondary{background:var(--border);color:var(--text)}
+.btn.danger{background:#fee2e2;color:#b91c1c}
+.habit{
+ display:flex;align-items:center;gap:12px;padding:14px 0;
+ border-bottom:1px solid var(--border)
+}
+.habit:last-child{border-bottom:0}
+.check{
+ width:32px;height:32px;border-radius:50%;
+ border:2px solid var(--border);background:var(--card);font-size:18px
+}
+.check.done{background:var(--primary);border-color:var(--primary);color:white}
+.hinfo{flex:1}.hname{font-weight:700}.hmeta{font-size:12px;color:var(--muted)}
+nav{
+ position:fixed;bottom:0;left:0;right:0;background:var(--card);
+ border-top:1px solid var(--border);display:flex;justify-content:center;z-index:10
+}
+nav button{
+ flex:1;max-width:175px;background:none;color:var(--muted);
+ padding:12px 4px;font-size:12px
+}
+nav button.active{color:var(--primary);font-weight:800}
+.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+.day{
+ padding:8px 2px;text-align:center;border-radius:10px;
+ background:var(--border);font-size:12px;min-height:42px
+}
+.day.done{background:#bde7ff}.day.today{outline:2px solid var(--primary)}
+.statgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat{padding:14px;background:var(--bg);border-radius:15px}
+.stat b{font-size:24px;display:block}
+input,select{
+ width:100%;padding:12px;border:1px solid var(--border);
+ border-radius:12px;background:var(--card);color:var(--text);margin:5px 0 12px
+}
+label{font-size:13px;font-weight:700}
+.modal{
+ position:fixed;inset:0;background:#0008;display:none;align-items:flex-end;
+ z-index:20
+}
+.modal.show{display:flex}
+.sheet{
+ width:100%;max-width:700px;margin:auto;background:var(--card);
+ border-radius:24px 24px 0 0;padding:22px;max-height:90vh;overflow:auto
+}
+.empty{text-align:center;padding:30px;color:var(--muted)}
+.toast{
+ position:fixed;top:18px;left:50%;transform:translateX(-50%);
+ background:#17202a;color:white;padding:11px 16px;border-radius:12px;
+ display:none;z-index:30
+}
+.badge{
+ display:inline-block;background:#e0f3ff;color:#0878bd;
+ padding:5px 9px;border-radius:20px;font-size:12px;margin:3px
+}
+body.dark{
+ --bg:#10161d;--card:#18212b;--text:#edf4fa;--muted:#91a1b1;
+ --border:#293642
+}
+body.green{--primary:#20b486}
+body.purple{--primary:#8b5cf6}
+</style>
+</head>
+
+<body>
+<div class="app">
+<header>
+ <div class="brand">Your Rituals</div>
+ <div class="subtitle">A simple system for building consistency.</div>
+ <div class="clock"><b id="clock">--:--</b><span id="date"></span></div>
+</header>
+
+<main id="app"></main>
+</div>
+
+<nav>
+ <button data-tab="today">🏠<br>Today</button>
+ <button data-tab="calendar">📅<br>Calendar</button>
+ <button data-tab="stats">📊<br>Stats</button>
+ <button data-tab="settings">⚙️<br>Settings</button>
+</nav>
+
+<div class="modal" id="modal">
+ <div class="sheet">
+  <div class="row">
+   <h2 id="modalTitle">Add Habit</h2>
+   <button class="btn secondary" onclick="closeModal()">✕</button>
+  </div>
+  <form id="habitForm">
+   <label>Habit name</label>
+   <input id="habitName" required placeholder="e.g. Read 20 minutes">
+
+   <label>Why / description</label>
+   <input id="habitWhy" placeholder="Why is this important?">
+
+   <label>Emoji</label>
+   <input id="habitEmoji" value="✨" maxlength="2">
+
+   <label>Category</label>
+   <select id="habitCategory">
+    <option>Health</option><option>Study</option><option>Work</option>
+    <option>Mind</option><option>Fitness</option><option>Other</option>
+   </select>
+
+   <label>Reminder time (optional)</label>
+   <input id="habitTime" type="time">
+
+   <div class="row">
+    <button type="button" class="btn secondary" onclick="closeModal()">Cancel</button>
+    <button class="btn">Save habit</button>
+   </div>
+  </form>
+ </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const KEY="your-rituals-v1";
+let state=JSON.parse(localStorage.getItem(KEY)||"null")||{
+ habits:[],history:{},theme:"",tab:"today"
+};
+let editId=null;
+
+function save(){
+ localStorage.setItem(KEY,JSON.stringify(state));
+}
+function today(){
+ return new Date().toISOString().slice(0,10);
+}
+function fmt(d){
+ return new Date(d+"T12:00:00").toLocaleDateString(undefined,
+ {day:"numeric",month:"short",year:"numeric"});
+}
+function escapeHTML(s){
+ return String(s||"").replace(/[&<>"']/g,m=>({
+ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+ }[m]));
+}
+function completed(id,d=today()){
+ return !!state.history[d]?.includes(id);
+}
+function toggle(id,d=today()){
+ if(!state.history[d])state.history[d]=[];
+ let a=state.history[d],i=a.indexOf(id);
+ i>=0?a.splice(i,1):a.push(id);
+ save();render();
+}
+function streak(id){
+ let n=0,d=new Date();
+ while(true){
+  let k=d.toISOString().slice(0,10);
+  if(completed(id,k)){n++;d.setDate(d.getDate()-1)}
+  else break;
+ }
+ return n;
+}
+function bestStreak(id){
+ let dates=[];
+ Object.keys(state.history).forEach(d=>{
+  if(state.history[d].includes(id))dates.push(d)
+ });
+ dates.sort();
+ let best=0,cur=0,prev=null;
+ dates.forEach(d=>{
+  if(prev){
+   let diff=(new Date(d)-new Date(prev))/86400000;
+   cur=diff===1?cur+1:1;
+  }else cur=1;
+  best=Math.max(best,cur);prev=d;
+ });
+ return best;
+}
+function toast(x){
+ let t=document.getElementById("toast");t.textContent=x;t.style.display="block";
+ setTimeout(()=>t.style.display="none",1800);
+}
+function render(){
+ document.body.className=state.theme||"";
+ let tab=state.tab||"today";
+ document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("active",b.dataset.tab===tab));
+ if(tab==="today")renderToday();
+ if(tab==="calendar")renderCalendar();
+ if(tab==="stats")renderStats();
+ if(tab==="settings")renderSettings();
+}
+function renderToday(){
+ let d=today(),done=state.habits.filter(h=>completed(h.id,d)).length;
+ let total=state.habits.length,pct=total?Math.round(done/total*100):0;
+ document.getElementById("app").innerHTML=`
+ <div class="card">
+  <div class="row"><div><div class="muted">Today's progress</div>
+  <div class="big">${pct}%</div></div>
+  <div style="font-size:34px">🔥</div></div>
+  <div class="progress"><i style="width:${pct}%"></i></div>
+  <div class="muted">${done} of ${total} rituals completed</div>
+ </div>
+
+ <div class="row" style="margin:10px 2px">
+  <h2>Today's Rituals</h2>
+  <button class="btn" onclick="openAdd()">＋ Add</button>
+ </div>
+
+ <div class="card">
+ ${state.habits.length?state.habits.map(h=>`
+  <div class="habit">
+   <button class="check ${completed(h.id)?'done':''}" onclick="toggle('${h.id}')">
+    ${completed(h.id)?'✓':''}
+   </button>
+   <div class="hinfo" onclick="editHabit('${h.id}')">
+    <div class="hname">${escapeHTML(h.emoji)} ${escapeHTML(h.name)}</div>
+    <div class="hmeta">${escapeHTML(h.category)} · 🔥 ${streak(h.id)} day streak</div>
+   </div>
+   <button class="btn secondary" onclick="editHabit('${h.id}')">•••</button>
+  </div>
+ `).join(""):`<div class="empty">No rituals yet.<br>Add your first one and start building consistency.</div>`}
+ </div>
+
+ <div class="card">
+  <b>Today's thought</b>
+  <p class="muted">${pct===100?"Everything is done. Excellent consistency.":"Small actions repeated consistently become a life."}</p>
+ </div>`;
+}
+function renderCalendar(){
+ let now=new Date(),y=now.getFullYear(),m=now.getMonth();
+ let first=new Date(y,m,1).getDay(),days=new Date(y,m+1,0).getDate();
+ let cells="";
+ ["S","M","T","W","T","F","S"].forEach(x=>cells+=`<div class="muted" style="text-align:center">${x}</div>`);
+ for(let i=0;i<first;i++)cells+="<div></div>";
+ for(let n=1;n<=days;n++){
+  let k=`${y}-${String(m+1).padStart(2,"0")}-${String(n).padStart(2,"0")}`;
+  let total=state.habits.length,done=(state.history[k]||[]).length;
+  let cls=done&&done===total&&total?"done ":"";
+  if(k===today())cls+="today";
+  cells+=`<div class="day ${cls}" onclick="showDay('${k}')">${n}<br><small>${total?Math.round(done/total*100):0}%</small></div>`;
+ }
+ document.getElementById("app").innerHTML=`
+ <div class="card"><h2>📅 ${now.toLocaleDateString(undefined,{month:"long",year:"numeric"})}</h2>
+ <div class="grid">${cells}</div></div>
+ <div class="card"><b>Tap a date</b><p class="muted">See which rituals were completed on that day.</p></div>`;
+}
+function showDay(d){
+ let names=(state.history[d]||[]).map(id=>state.habits.find(h=>h.id===id)?.name).filter(Boolean);
+ alert(fmt(d)+"\n\n"+(names.length?names.map(x=>"✓ "+x).join("\n"):"No completed rituals"));
+}
+function renderStats(){
+ let total=0;
+ Object.values(state.history).forEach(a=>total+=a.length);
+ let best=state.habits.reduce((x,h)=>Math.max(x,bestStreak(h.id)),0);
+ let todayDone=state.habits.filter(h=>completed(h.id)).length;
+ let rate=state.habits.length?Math.round(todayDone/state.habits.length*100):0;
+ document.getElementById("app").innerHTML=`
+ <h2>📊 Statistics</h2>
+ <div class="statgrid">
+  <div class="stat"><b>${total}</b><span class="muted">Total completions</span></div>
+  <div class="stat"><b>${best}</b><span class="muted">Best streak</span></div>
+  <div class="stat"><b>${rate}%</b><span class="muted">Today's consistency</span></div>
+  <div class="stat"><b>${state.habits.length}</b><span class="muted">Active rituals</span></div>
+ </div>
+ <div class="card"><h3>🔥 Habit streaks</h3>
+ ${state.habits.length?state.habits.map(h=>`
+  <div class="row" style="padding:10px 0;border-bottom:1px solid var(--border)">
+   <span>${h.emoji} ${escapeHTML(h.name)}</span>
+   <b>${streak(h.id)} 🔥</b>
+  </div>`).join(""):"<p class='muted'>Add habits to see statistics.</p>"}</div>`;
+}
+function renderSettings(){
+ document.getElementById("app").innerHTML=`
+ <h2>⚙️ Settings</h2>
+ <div class="card">
+  <h3>Appearance</h3>
+  <button class="btn secondary" onclick="setTheme('')">🌤️ Sky</button>
+  <button class="btn secondary" onclick="setTheme('dark')">🌙 Dark</button>
+  <button class="btn secondary" onclick="setTheme('green')">🌿 Green</button>
+  <button class="btn secondary" onclick="setTheme('purple')">💜 Purple</button>
+ </div>
+ <div class="card">
+  <h3>💾 Backup & Restore</h3>
+  <button class="btn" onclick="exportData()">Export JSON</button>
+  <button class="btn secondary" onclick="document.getElementById('importFile').click()">Import JSON</button>
+  <input id="importFile" type="file" accept=".json" style="display:none" onchange="importData(event)">
+ </div>
+ <div class="card">
+  <h3>🔔 Notifications</h3>
+  <button class="btn" onclick="requestNotify()">Enable notifications</button>
+  <p class="muted">Browser notification support depends on your device/browser settings.</p>
+ </div>
+ <div class="card">
+  <h3>About</h3>
+  <p><b>Your Rituals</b><br><span class="muted">A simple system for building consistency.</span></p>
+  <small class="muted">Powered by Satyam · Local-first</small>
+ </div>
+ <div class="card">
+  <button class="btn danger" onclick="resetData()">Reset all data</button>
+ </div>`;
+}
+function openAdd(){
+ editId=null;
+ document.getElementById("modalTitle").textContent="Add Habit";
+ document.getElementById("habitForm").reset();
+ document.getElementById("habitEmoji").value="✨";
+ document.getElementById("modal").classList.add("show");
+}
+function editHabit(id){
+ let h=state.habits.find(x=>x.id===id);if(!h)return;
+ editId=id;
+ habitName.value=h.name;habitWhy.value=h.why||"";
+ habitEmoji.value=h.emoji||"✨";habitCategory.value=h.category||"Other";
+ habitTime.value=h.time||"";
+ modalTitle.textContent="Edit Habit";modal.classList.add("show");
+}
+function closeModal(){modal.classList.remove("show")}
+habitForm.onsubmit=e=>{
+ e.preventDefault();
+ let h={
+  id:editId||crypto.randomUUID(),name:habitName.value.trim(),
+  why:habitWhy.value.trim(),emoji:habitEmoji.value||"✨",
+  category:habitCategory.value,time:habitTime.value
+ };
+ if(editId){
+  let i=state.habits.findIndex(x=>x.id===editId);state.habits[i]=h;
+ }else state.habits.push(h);
+ save();closeModal();render();toast("Ritual saved ✓");
+};
+function setTheme(t){state.theme=t;save();render()}
+function exportData(){
+ let blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});
+ let a=document.createElement("a");a.href=URL.createObjectURL(blob);
+ a.download="your-rituals-backup.json";a.click();
+}
+function importData(e){
+ let f=e.target.files[0];if(!f)return;
+ let r=new FileReader();
+ r.onload=()=>{
+  try{
+   let x=JSON.parse(r.result);
+   if(!x.habits||!x.history)throw 0;
+   state=x;save();render();toast("Backup restored ✓");
+  }catch{alert("Invalid backup file.");}
+ };r.readAsText(f);
+}
+function resetData(){
+ if(confirm("Delete all rituals and history? This cannot be undone.")){
+  localStorage.removeItem(KEY);location.reload();
+ }
+}
+async function requestNotify(){
+ if(!("Notification"in window)){alert("Notifications are not supported here.");return}
+ let p=await Notification.requestPermission();
+ alert(p==="granted"?"Notifications enabled ✓":"Permission not granted.");
+}
+function updateClock(){
+ let n=new Date();
+ clock.textContent=n.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});
+ date.textContent=n.toLocaleDateString(undefined,{weekday:"short",day:"numeric",month:"short"});
+}
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{
+ state.tab=b.dataset.tab;save();render();
+});
+updateClock();setInterval(updateClock,1000);render();
+</script>
+</body>
+</html>
