@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#5b7cff">
-<title>Your Rituals · Powered by Satyam</title>
+<title>Your Rituals</title>
 <style>
 :root{
   --bg:#f5f7fb;--surface:#fff;--surface2:#f0f3fa;--text:#111827;
@@ -144,8 +144,6 @@ input:focus,select:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(9
   background:#111827;color:#fff;padding:11px 16px;border-radius:13px;
   display:none;z-index:80;font-size:13px;font-weight:700;box-shadow:0 10px 30px #0003;
 }
-.footerBrand{text-align:center;color:#8a93a3;font-size:12px;margin:25px 0 5px}
-.footerBrand b{color:var(--primary)}
 body.dark{
   --bg:#0d1219;--surface:#151d27;--surface2:#202a36;--text:#f3f6fa;
   --muted:#9aa8b8;--line:#293543;--shadow:0 12px 35px rgba(0,0,0,.22)
@@ -270,9 +268,6 @@ function toast(msg){
   const t=$("toast");t.textContent=msg;t.style.display="block";
   clearTimeout(window.toastTimer);window.toastTimer=setTimeout(()=>t.style.display="none",1800);
 }
-function footer(){
-  return `<div class="footerBrand">Powered by <b>Satyam</b></div>`;
-}
 function render(){
   document.body.className=state.theme||"";
   const tab=state.tab||"today";
@@ -317,7 +312,7 @@ function renderToday(){
       <b>Today's thought</b>
       <p class="muted">${pct===100&&total?"Everything is done. Excellent consistency.":"Small actions repeated consistently become a life."}</p>
     </div>
-    ${footer()}`;
+    `;
 }
 function renderCalendar(){
   const now=new Date(),y=now.getFullYear(),m=now.getMonth(),first=new Date(y,m,1).getDay(),days=new Date(y,m+1,0).getDate();
@@ -334,7 +329,7 @@ function renderCalendar(){
     <div class="sectionHead"><h2>Calendar</h2><span class="monthPill">${now.toLocaleDateString(undefined,{month:"long",year:"numeric"})}</span></div>
     <div class="card"><div class="grid">${cells}</div></div>
     <div class="card"><b>Consistency calendar</b><p class="muted">Tap any date to see completed rituals.</p></div>
-    ${footer()}`;
+    `;
 }
 function showDay(k){
   const ids=state.history[k]||[];
@@ -360,7 +355,7 @@ function renderStats(){
         <div class="streakRow"><span class="streakName">${escapeHTML(h.emoji||"✨")} ${escapeHTML(h.name)}</span><span class="streakValue">${streak(h.id)} 🔥</span></div>
       `).join(""):"<div class='empty'>Add rituals to see your statistics.</div>"}
     </div>
-    ${footer()}`;
+    `;
 }
 function renderSettings(){
   $("app").innerHTML=`
@@ -402,7 +397,7 @@ function renderSettings(){
     <div class="card">
       <button class="btn danger" onclick="resetData()">Reset all data</button>
     </div>
-    ${footer()}`;
+    `;
 }
 function openAdd(){
   editId=null;$("modalTitle").textContent="Add Ritual";$("habitForm").reset();
